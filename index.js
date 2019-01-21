@@ -1,22 +1,30 @@
 const Koa = require("koa");
 const app = new Koa();
 
-// add date method to context
-app.context.date = Date();
 app.context.userData = {
     first: 'Manny',
     last: 'Henri'
 };
 
+// log
+app.use(async (ctx, next) => {
+    await next();
+    const responseTime = ctx.response.get('X-Response-Time');
+    console.log(`${ctx.request.url} - ${responseTime}`);
+});
+
+app.use(async (ctx, next) => {
+    const start = Date.now();
+    await next();
+    const milisecond = Date.now() - start;
+    ctx.set('X-Response-Time', `${milisecond}ms`)
+});
+
 // response
 app.use(async (ctx) => { 
-    try {
-        return ctx.response.body = await ctx.userData;
-    }
-    catch(err) {
-        // return ctx.throw(400, 'data required');
-        console.log(err);
-    }
+    ctx.response.body = ctx.userData;
 });
+
+
 
 app.listen(3001);
